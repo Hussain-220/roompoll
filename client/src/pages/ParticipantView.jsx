@@ -119,19 +119,10 @@ export default function ParticipantView() {
               {finalResults.map((qResult, idx) => {
                 const myAnswer = localStorage.getItem(`voted_${String(qResult.questionId || qResult._id)}`);
                 const totalVotes = qResult.totalVotes || 0;
-                const isCorrect = qResult.correctAnswer && myAnswer === qResult.correctAnswer;
-                const isWrong = qResult.correctAnswer && myAnswer && myAnswer !== qResult.correctAnswer;
-                const didNotVote = !myAnswer;
                 
                 return (
                   <div key={qResult.questionId || qResult._id} className="card p-6 bg-[var(--bg-elevated)] w-full">
-                    <div className="flex justify-between items-start mb-4">
-                      <h3 className="text-xl font-bold">{idx + 1}. {qResult.questionText}</h3>
-                      {isCorrect && <div className="badge bg-green-500 text-white px-3 py-1 text-sm font-bold">✅ Correct!</div>}
-                      {isWrong && <div className="badge bg-red-500 text-white px-3 py-1 text-sm font-bold">❌ Wrong</div>}
-                      {didNotVote && <div className="badge bg-gray-500 text-white px-3 py-1 text-sm font-bold">⊘ Not answered</div>}
-                    </div>
-                    
+                    <h3 className="text-xl font-bold mb-6">{idx + 1}. {qResult.questionText}</h3>
                     <div className="flex flex-col gap-4">
                       {qResult.type === 'rating' ? (
                         <>
@@ -172,73 +163,63 @@ export default function ParticipantView() {
                           const isMyVote = opt.answer === myAnswer;
                           const isCorrect = qResult.correctAnswer && opt.answer === qResult.correctAnswer;
                           const isMyAnswerCorrect = isMyVote && isCorrect;
-                          const isMyAnswerWrong = isMyVote && qResult.correctAnswer && opt.answer !== qResult.correctAnswer;
+                          const isMyAnswerWrong = isMyVote && !isCorrect && qResult.correctAnswer;
                           const pct = opt.percentage !== undefined ? opt.percentage : (totalVotes > 0 ? Math.round((opt.count / totalVotes) * 100) : 0);
                           
-                          // Styling based on correctness and user choice
-                          let bgColor = 'bg-[var(--text-secondary)]';
-                          let borderColor = 'border-[var(--border)]';
-                          let bgOpacity = 'opacity-10';
-                          let textColor = '';
-                          let icon = '';
-                          let statusBadge = '';
+                          // Determine background color
+                          let bgColor = 'bg-gray-300';
+                          let bgOpacity = 'opacity-5';
+                          let borderColor = 'border border-[var(--border)]';
                           
                           if (isMyAnswerCorrect) {
-                            // User got it right - GREEN
+                            // User selected this and it's correct - light green
                             bgColor = 'bg-green-500';
-                            borderColor = 'border-2 border-green-500';
-                            bgOpacity = 'opacity-25';
-                            textColor = 'text-green-600';
-                            icon = '✅';
-                            statusBadge = 'Correct!';
+                            bgOpacity = 'opacity-15';
+                            borderColor = 'border-2 border-green-400';
                           } else if (isMyAnswerWrong) {
-                            // User got it wrong - RED, but show correct answer in green
+                            // User selected this but it's wrong - light red
                             bgColor = 'bg-red-500';
-                            borderColor = 'border-2 border-red-500';
-                            bgOpacity = 'opacity-30';
-                            textColor = 'text-red-600';
-                            icon = '❌';
-                            statusBadge = 'Wrong';
+                            bgOpacity = 'opacity-15';
+                            borderColor = 'border-2 border-red-400';
                           } else if (isCorrect) {
-                            // Correct answer (but user didn't choose it) - GREEN
+                            // This is the correct answer (but user didn't select it) - light green
                             bgColor = 'bg-green-500';
-                            borderColor = 'border-2 border-green-500';
-                            bgOpacity = 'opacity-20';
-                            textColor = 'text-green-600';
-                            icon = '✓';
-                            statusBadge = 'Correct answer';
-                          } else if (isMyVote) {
-                            // User's answer but not correct - just show their vote
-                            borderColor = 'border-2 border-[var(--accent)]';
-                            statusBadge = 'Your vote';
+                            bgOpacity = 'opacity-10';
+                            borderColor = 'border border-green-300';
                           }
                           
                           return (
-                            <div key={oIdx} className={`relative p-4 rounded-lg border overflow-hidden transition-all ${borderColor}`}>
+                            <div key={oIdx} className={`relative p-4 rounded-lg ${borderColor} overflow-hidden transition-all hover:shadow-md`}>
+                              {/* Background bar */}
                               <div className="absolute inset-0 bg-[var(--bg-surface)] -z-10">
                                 <div 
                                   className={`h-full ${bgColor} ${bgOpacity}`} 
                                   style={{ width: `${pct}%` }}
                                 />
                               </div>
+                              
+                              {/* Content */}
                               <div className="flex justify-between items-center w-full z-10">
-                                <div className="flex items-center gap-3">
-                                  {icon && <span className={`text-xl ${textColor}`}>{icon}</span>}
-                                  <span className={`font-bold ${textColor}`}>{opt.answer}</span>
-                                  {statusBadge && (
-                                    <span className={`badge text-xs px-2 py-0.5 font-semibold ${
-                                      isMyAnswerCorrect ? 'bg-green-500 text-white' : 
-                                      isMyAnswerWrong ? 'bg-red-500 text-white' :
-                                      isCorrect ? 'bg-green-500 text-white' :
-                                      'bg-[var(--accent)] text-white'
-                                    }`}>
-                                      {statusBadge}
+                                <div className="flex items-center gap-3 flex-1">
+                                  <span className="font-bold text-base md:text-lg">{opt.answer}</span>
+                                  
+                                  {/* Your vote indicator */}
+                                  {isMyVote && (
+                                    <span className="badge bg-[var(--accent)] text-white text-xs px-2 py-1 font-semibold">
+                                      Your vote ✓
                                     </span>
                                   )}
+                                  
+                                  {/* Correct answer indicator (if they didn't select it) */}
+                                  {isCorrect && !isMyVote && (
+                                    <span className="text-green-600 font-bold text-sm">✓ Correct answer</span>
+                                  )}
                                 </div>
-                                <div className="text-right">
+                                
+                                {/* Vote count & percentage */}
+                                <div className="text-right ml-4 whitespace-nowrap">
                                   <div className="font-bold text-[var(--text-secondary)]">{opt.count}</div>
-                                  <div className="text-xs text-[var(--text-secondary)] font-medium">{pct}%</div>
+                                  <div className="text-xs text-[var(--text-secondary)]">{pct}%</div>
                                 </div>
                               </div>
                             </div>

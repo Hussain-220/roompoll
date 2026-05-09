@@ -212,27 +212,31 @@ export default function HostSession() {
              qResult.options.map((opt, idx) => {
               const isWinner = qResult.winner && opt.answer === qResult.winner && opt.count > 0;
               const isCorrect = qResult.correctAnswer && opt.answer === qResult.correctAnswer;
-              const bgColor = isCorrect ? 'bg-green-500' : (opt.answer !== qResult.correctAnswer && qResult.correctAnswer ? 'bg-red-500' : 'bg-[var(--text-secondary)]');
-              const borderColor = isCorrect ? 'border-green-500' : (opt.answer !== qResult.correctAnswer && qResult.correctAnswer ? 'border-red-500' : 'border-[var(--border)]');
-              const textColor = isCorrect ? 'text-green-600' : (opt.answer !== qResult.correctAnswer && qResult.correctAnswer ? 'text-red-600' : '');
+              const pct = opt.percentage || 0;
               
               return (
-                <div key={idx} className={`relative p-4 rounded-xl border-2 transition-all ${borderColor}`}>
+                <div key={idx} className={`relative p-4 rounded-xl border-2 transition-all ${
+                  isCorrect ? 'border-green-500' : (isWinner && !isCorrect ? 'border-[var(--accent)]' : 'border-[var(--border)]')
+                }`}>
                   <div className="absolute inset-0 bg-[var(--bg-surface)] rounded-xl overflow-hidden -z-10">
                     <motion.div 
-                      className={`h-full ${bgColor} opacity-20`}
+                      className={`h-full ${
+                        isCorrect ? 'bg-green-500' : (isWinner ? 'bg-[var(--accent)]' : 'bg-gray-300')
+                      } ${isCorrect ? 'opacity-15' : 'opacity-10'}`}
                       initial={{ width: 0 }}
-                      animate={{ width: `${opt.percentage}%` }}
+                      animate={{ width: `${pct}%` }}
                       transition={{ duration: 1, ease: "easeOut" }}
                     />
                   </div>
                   <div className="flex justify-between items-center z-10 w-full">
-                    <span className={`text-xl font-bold ${textColor}`}>
-                      {isCorrect && '✅ '}{isWinner && !isCorrect && '🥇 '}{opt.answer}
-                    </span>
+                    <div className="flex items-center gap-3">
+                      {isCorrect && <span className="text-green-600 font-bold">✓ Correct answer</span>}
+                      {isWinner && !isCorrect && <span className="text-[var(--accent)] font-bold text-lg">🥇</span>}
+                      <span className="text-lg font-bold">{opt.answer}</span>
+                    </div>
                     <div className="flex items-center gap-4">
-                      <span className="text-lg font-bold">{opt.percentage}%</span>
-                      <span className="text-[var(--text-secondary)]">({opt.count})</span>
+                      <span className="font-bold">{pct}%</span>
+                      <span className="text-[var(--text-secondary)] font-bold">({opt.count})</span>
                     </div>
                   </div>
                 </div>
