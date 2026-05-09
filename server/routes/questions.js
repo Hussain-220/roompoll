@@ -45,7 +45,7 @@ router.put('/:id', protect, async (req, res) => {
   if (type !== undefined) question.type = type;
   if (options !== undefined) question.options = options;
   if (order !== undefined) question.order = order;
-  if (correctAnswer !== undefined) question.correctAnswer = question.type === 'mcq' ? correctAnswer : null;
+  if (correctAnswer !== undefined) question.correctAnswer = (type || question.type) === 'mcq' ? correctAnswer : null;
 
   await question.save();
   res.json(question);
