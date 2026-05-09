@@ -201,7 +201,7 @@ export default function ParticipantView() {
                               {/* Content */}
                               <div className="flex justify-between items-center w-full z-10">
                                 <div className="flex items-center gap-3 flex-1">
-                                  <span className="font-bold text-base md:text-lg">{opt.answer}</span>
+                                  <span className="font-bold text-base md:text-lg text-[var(--text-primary)]">{opt.answer}</span>
                                   
                                   {/* Your vote indicator */}
                                   {isMyVote && (
@@ -212,14 +212,14 @@ export default function ParticipantView() {
                                   
                                   {/* Correct answer indicator (if they didn't select it) */}
                                   {isCorrect && !isMyVote && (
-                                    <span className="text-green-600 font-bold text-sm">✓ Correct answer</span>
+                                    <span className="text-green-600 font-bold text-sm bg-green-50 px-2 py-1 rounded">✓ Correct</span>
                                   )}
                                 </div>
                                 
                                 {/* Vote count & percentage */}
-                                <div className="text-right ml-4 whitespace-nowrap">
-                                  <div className="font-bold text-[var(--text-secondary)]">{opt.count}</div>
-                                  <div className="text-xs text-[var(--text-secondary)]">{pct}%</div>
+                                <div className="text-right ml-4 whitespace-nowrap text-[var(--text-secondary)]">
+                                  <div className="font-bold">{opt.count}</div>
+                                  <div className="text-xs">{pct}%</div>
                                 </div>
                               </div>
                             </div>
