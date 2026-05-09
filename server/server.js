@@ -26,7 +26,14 @@ const io = new Server(server, {
 });
 
 // Middleware
-app.use(cors({ origin: process.env.CLIENT_URL }));
+const corsOptions = {
+  origin: process.env.CLIENT_URL,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  credentials: true,
+};
+
+console.log('CORS configured for origin:', corsOptions.origin);
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Routes
