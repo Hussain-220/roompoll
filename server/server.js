@@ -74,8 +74,18 @@ mongoose
   .connect(uri)
   .then(() => {
     console.log('✅ MongoDB connected');
-    server.listen(PORT, '0.0.0.0', () => {
+    const listener = server.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`📡 Server listening on: ${JSON.stringify(listener.address())}`);
+    });
+
+    server.on('error', (err) => {
+      console.error('❌ Server error:', err);
+      process.exit(1);
+    });
+
+    server.on('clientError', (err) => {
+      console.error('❌ Client error:', err);
     });
   })
   .catch((err) => {
