@@ -48,6 +48,12 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
+// Catch-all 404 handler
+app.use((req, res) => {
+  console.log(`⚠️ No route found for: ${req.method} ${req.url}`);
+  res.status(404).json({ error: 'Not found' });
+});
+
 console.log('✅ Routes loaded');
 
 // Error handler
