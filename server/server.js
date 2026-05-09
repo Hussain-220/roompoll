@@ -48,19 +48,35 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-// Catch-all 404 handler
+// Load routes immediately (don't wait for MongoDB)
+try {
+  const authRoutes = require('./routes/auth');
+  const roomRoutes = require('./routes/rooms');
+  const questionRoutes = require('./routes/questions');
+  const voteRoutes = require('./routes/votes');
+
+  app.use('/api/auth', authRoutes);
+  app.use('/api/rooms', roomRoutes);
+  app.use('/api/questions', questionRoutes);
+  app.use('/api/votes', voteRoutes);
+  console.log('✅ All routes loaded successfully');
+} catch (err) {
+  console.error('❌ Error loading routes:', err.message);
+}
+
+// Global error handler (before 404 handler)
+app.use((err, req, res, next) => {
+  console.error('❌ Error:', err.message);
+  res.status(500).json({ message: err.message });
+});
+
+// Catch-all 404 handler (LAST)
 app.use((req, res) => {
   console.log(`⚠️ No route found for: ${req.method} ${req.url}`);
   res.status(404).json({ error: 'Not found' });
 });
 
-console.log('✅ Routes loaded');
-
-// Error handler
-app.use((err, req, res, next) => {
-  console.error('❌ Error:', err.message);
-  res.status(500).json({ message: err.message });
-});
+console.log('✅ Routes configured');
 
 // START SERVER IMMEDIATELY (don't wait for MongoDB)
 const listener = server.listen(PORT, '0.0.0.0', () => {
@@ -85,18 +101,9 @@ mongoose
   .then(() => {
     console.log('✅ MongoDB connected successfully');
     
-    // Load complex routes only after DB is connected
-    const authRoutes = require('./routes/auth');
-    const roomRoutes = require('./routes/rooms');
-    const questionRoutes = require('./routes/questions');
-    const voteRoutes = require('./routes/votes');
+    // Initialize Socket.io only after DB is ready
     const socketHandler = require('./socket/socketHandler');
     const { Server } = require('socket.io');
-
-    app.use('/api/auth', authRoutes);
-    app.use('/api/rooms', roomRoutes);
-    app.use('/api/questions', questionRoutes);
-    app.use('/api/votes', voteRoutes);
     
     const io = new Server(server, {
       cors: {
@@ -106,12 +113,11 @@ mongoose
     });
     
     socketHandler(io);
-    console.log('✅ Socket.io and complex routes initialized');
+    console.log('✅ Socket.io initialized');
   })
   .catch((err) => {
     console.error('❌ MongoDB connection failed:', err.message);
-    // Don't exit - keep minimal server running so health checks pass
-    console.log('⚠️  Running in degraded mode - DB required for full functionality');
+    console.log('⚠️  Running in degraded mode - some features may not work');
   });
 
 // Error handlers
