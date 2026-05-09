@@ -212,7 +212,7 @@ export default function ParticipantView() {
                                   
                                   {/* Correct answer indicator (if they didn't select it) */}
                                   {isCorrect && !isMyVote && (
-                                    <span className="text-green-600 font-bold text-sm bg-green-50 px-2 py-1 rounded">✓ Correct</span>
+                                    <span className="text-green-600 font-bold text-sm">✓ Correct</span>
                                   )}
                                 </div>
                                 
