@@ -44,14 +44,36 @@ app.get('/api/health', (req, res) => {
 
 console.log('✅ Routes loaded');
 
-// MongoDB connection
+// Error handler
+app.use((err, req, res, next) => {
+  console.error('❌ Error:', err.message);
+  res.status(500).json({ message: err.message });
+});
+
+// START SERVER IMMEDIATELY (don't wait for MongoDB)
+const listener = server.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📡 Listening at:`, listener.address());
+});
+
+server.on('error', (err) => {
+  console.error('❌ Server error:', err);
+  process.exit(1);
+});
+
+// MongoDB connection (can happen in background)
 console.log('🔗 Connecting to MongoDB...');
+console.log('MongoDB URI:', uri ? uri.substring(0, 40) + '...' : 'MISSING');
+
 mongoose
-  .connect(uri, { serverSelectionTimeoutMS: 10000 })
+  .connect(uri, { 
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 45000,
+  })
   .then(() => {
-    console.log('✅ MongoDB connected');
+    console.log('✅ MongoDB connected successfully');
     
-    // Now attach complex routes and socket.io
+    // Load complex routes only after DB is connected
     const authRoutes = require('./routes/auth');
     const roomRoutes = require('./routes/rooms');
     const questionRoutes = require('./routes/questions');
@@ -73,21 +95,11 @@ mongoose
     
     socketHandler(io);
     console.log('✅ Socket.io and complex routes initialized');
-
-    // Error handler
-    app.use((err, req, res, next) => {
-      console.error('❌ Error:', err.message);
-      res.status(500).json({ message: err.message });
-    });
-
-    // Start server
-    server.listen(PORT, '0.0.0.0', () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-    });
   })
   .catch((err) => {
-    console.error('❌ MongoDB connection error:', err.message);
-    process.exit(1);
+    console.error('❌ MongoDB connection failed:', err.message);
+    // Don't exit - keep minimal server running so health checks pass
+    console.log('⚠️  Running in degraded mode - DB required for full functionality');
   });
 
 // Error handlers
