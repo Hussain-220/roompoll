@@ -7,7 +7,7 @@ const router = express.Router();
 
 // POST /api/questions — Add question to room
 router.post('/', protect, async (req, res) => {
-  const { roomId, text, type, options, order } = req.body;
+  const { roomId, text, type, options, order, correctAnswer } = req.body;
 
   const room = await Room.findById(roomId);
   if (!room) return res.status(404).json({ message: 'Room not found' });
@@ -15,7 +15,14 @@ router.post('/', protect, async (req, res) => {
     return res.status(403).json({ message: 'Not authorized' });
   }
 
-  const question = await Question.create({ roomId, text, type, options: options || [], order: order || 0 });
+  const question = await Question.create({ 
+    roomId, 
+    text, 
+    type, 
+    options: options || [], 
+    order: order || 0,
+    correctAnswer: type === 'mcq' ? correctAnswer : null
+  });
 
   room.questions.push(question._id);
   await room.save();
@@ -33,11 +40,12 @@ router.put('/:id', protect, async (req, res) => {
     return res.status(403).json({ message: 'Not authorized' });
   }
 
-  const { text, type, options, order } = req.body;
+  const { text, type, options, order, correctAnswer } = req.body;
   if (text !== undefined) question.text = text;
   if (type !== undefined) question.type = type;
   if (options !== undefined) question.options = options;
   if (order !== undefined) question.order = order;
+  if (correctAnswer !== undefined) question.correctAnswer = question.type === 'mcq' ? correctAnswer : null;
 
   await question.save();
   res.json(question);
