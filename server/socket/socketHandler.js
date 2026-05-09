@@ -17,7 +17,9 @@ async function getVoteResults(questionId) {
 
 module.exports = (io) => {
   io.on('connection', (socket) => {
-    console.log(`Socket connected: ${socket.id}`);
+    console.log(`\n🔌 Socket connected: ${socket.id}`);
+    console.log(`   Auth token exists: ${!!socket.handshake.auth.token}`);
+    console.log(`   Connected sockets in io:`, io.engine.clientsCount);
 
     // --- Participant joins room ---
     socket.on('join-room', async ({ code, participantId }) => {
@@ -269,7 +271,8 @@ module.exports = (io) => {
               type: question.type,
               options: displayOptions,
               totalVotes,
-              winner
+              winner,
+              correctAnswer: question.correctAnswer || null
             };
           })
         );

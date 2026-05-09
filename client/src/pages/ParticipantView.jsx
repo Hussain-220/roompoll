@@ -108,10 +108,19 @@ export default function ParticipantView() {
               {finalResults.map((qResult, idx) => {
                 const myAnswer = localStorage.getItem(`voted_${String(qResult.questionId || qResult._id)}`);
                 const totalVotes = qResult.totalVotes || 0;
+                const isCorrect = qResult.correctAnswer && myAnswer === qResult.correctAnswer;
+                const isWrong = qResult.correctAnswer && myAnswer && myAnswer !== qResult.correctAnswer;
+                const didNotVote = !myAnswer;
                 
                 return (
                   <div key={qResult.questionId || qResult._id} className="card p-6 bg-[var(--bg-elevated)] w-full">
-                    <h3 className="text-xl font-bold mb-6">{idx + 1}. {qResult.questionText}</h3>
+                    <div className="flex justify-between items-start mb-4">
+                      <h3 className="text-xl font-bold">{idx + 1}. {qResult.questionText}</h3>
+                      {isCorrect && <div className="badge bg-green-500 text-white px-3 py-1 text-sm font-bold">✅ Correct!</div>}
+                      {isWrong && <div className="badge bg-red-500 text-white px-3 py-1 text-sm font-bold">❌ Wrong</div>}
+                      {didNotVote && <div className="badge bg-gray-500 text-white px-3 py-1 text-sm font-bold">⊘ Not answered</div>}
+                    </div>
+                    
                     <div className="flex flex-col gap-4">
                       {qResult.type === 'rating' ? (
                         <>
@@ -149,34 +158,77 @@ export default function ParticipantView() {
                         </>
                       ) : (
                         qResult.options.map((opt, oIdx) => {
-                          const isWinner = opt.answer === qResult.winner && opt.count > 0;
                           const isMyVote = opt.answer === myAnswer;
                           const isCorrect = qResult.correctAnswer && opt.answer === qResult.correctAnswer;
+                          const isMyAnswerCorrect = isMyVote && isCorrect;
                           const isMyAnswerWrong = isMyVote && qResult.correctAnswer && opt.answer !== qResult.correctAnswer;
                           const pct = opt.percentage !== undefined ? opt.percentage : (totalVotes > 0 ? Math.round((opt.count / totalVotes) * 100) : 0);
                           
-                          const bgColor = isCorrect ? 'bg-green-500' : (opt.answer !== qResult.correctAnswer && qResult.correctAnswer ? 'bg-red-500' : 'bg-[var(--accent)]');
-                          const borderColor = isCorrect ? 'border-green-500' : (isMyAnswerWrong ? 'border-red-500' : (isWinner ? 'border-[var(--accent)]' : 'border-[var(--border)]'));
+                          // Styling based on correctness and user choice
+                          let bgColor = 'bg-[var(--text-secondary)]';
+                          let borderColor = 'border-[var(--border)]';
+                          let bgOpacity = 'opacity-10';
+                          let textColor = '';
+                          let icon = '';
+                          let statusBadge = '';
+                          
+                          if (isMyAnswerCorrect) {
+                            // User got it right - GREEN
+                            bgColor = 'bg-green-500';
+                            borderColor = 'border-2 border-green-500';
+                            bgOpacity = 'opacity-25';
+                            textColor = 'text-green-600';
+                            icon = '✅';
+                            statusBadge = 'Correct!';
+                          } else if (isMyAnswerWrong) {
+                            // User got it wrong - RED, but show correct answer in green
+                            bgColor = 'bg-red-500';
+                            borderColor = 'border-2 border-red-500';
+                            bgOpacity = 'opacity-30';
+                            textColor = 'text-red-600';
+                            icon = '❌';
+                            statusBadge = 'Wrong';
+                          } else if (isCorrect) {
+                            // Correct answer (but user didn't choose it) - GREEN
+                            bgColor = 'bg-green-500';
+                            borderColor = 'border-2 border-green-500';
+                            bgOpacity = 'opacity-20';
+                            textColor = 'text-green-600';
+                            icon = '✓';
+                            statusBadge = 'Correct answer';
+                          } else if (isMyVote) {
+                            // User's answer but not correct - just show their vote
+                            borderColor = 'border-2 border-[var(--accent)]';
+                            statusBadge = 'Your vote';
+                          }
                           
                           return (
-                            <div key={oIdx} className={`relative p-3 rounded-lg border overflow-hidden ${borderColor}`}>
+                            <div key={oIdx} className={`relative p-4 rounded-lg border overflow-hidden transition-all ${borderColor}`}>
                               <div className="absolute inset-0 bg-[var(--bg-surface)] -z-10">
                                 <div 
-                                  className={`h-full ${bgColor} ${isCorrect ? 'opacity-20' : (isMyAnswerWrong ? 'opacity-30' : 'opacity-10')}`} 
+                                  className={`h-full ${bgColor} ${bgOpacity}`} 
                                   style={{ width: `${pct}%` }}
                                 />
                               </div>
-                              <div className="flex justify-between items-center w-full z-10 text-sm md:text-base">
-                                <div className="font-bold flex items-center gap-2">
-                                  {isCorrect && <span className="text-green-600">✅</span>}
-                                  {isMyAnswerWrong && <span className="text-red-600">❌</span>}
-                                  {isWinner && !isCorrect && !isMyAnswerWrong && <span className="text-[var(--accent)]">🏆</span>}
-                                  {opt.answer}
-                                  {isMyVote && isCorrect && <span className="badge bg-green-500 text-white text-xs px-2 py-0.5 ml-2">Correct! ✓</span>}
-                                  {isMyVote && isMyAnswerWrong && <span className="badge bg-red-500 text-white text-xs px-2 py-0.5 ml-2">Wrong ✗</span>}
-                                  {isMyVote && !isCorrect && !isMyAnswerWrong && <span className="badge bg-[var(--accent)] text-white text-xs px-2 py-0.5 ml-2">Your vote ✓</span>}
+                              <div className="flex justify-between items-center w-full z-10">
+                                <div className="flex items-center gap-3">
+                                  {icon && <span className={`text-xl ${textColor}`}>{icon}</span>}
+                                  <span className={`font-bold ${textColor}`}>{opt.answer}</span>
+                                  {statusBadge && (
+                                    <span className={`badge text-xs px-2 py-0.5 font-semibold ${
+                                      isMyAnswerCorrect ? 'bg-green-500 text-white' : 
+                                      isMyAnswerWrong ? 'bg-red-500 text-white' :
+                                      isCorrect ? 'bg-green-500 text-white' :
+                                      'bg-[var(--accent)] text-white'
+                                    }`}>
+                                      {statusBadge}
+                                    </span>
+                                  )}
                                 </div>
-                                <span className="font-bold text-[var(--text-secondary)]">{pct}%</span>
+                                <div className="text-right">
+                                  <div className="font-bold text-[var(--text-secondary)]">{opt.count}</div>
+                                  <div className="text-xs text-[var(--text-secondary)] font-medium">{pct}%</div>
+                                </div>
                               </div>
                             </div>
                           );
