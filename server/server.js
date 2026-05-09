@@ -1,12 +1,16 @@
 require('express-async-errors');
-require('dotenv').config();
+
+// Load dotenv only in development (local machine)
+// This prevents it from overriding Railway environment variables
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
 
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const mongoose = require('mongoose');
 const cors = require('cors');
-
 const authRoutes = require('./routes/auth');
 const roomRoutes = require('./routes/rooms');
 const questionRoutes = require('./routes/questions');
@@ -15,7 +19,6 @@ const socketHandler = require('./socket/socketHandler');
 
 const app = express();
 const server = http.createServer(app);
-
 const io = new Server(server, {
   cors: {
     origin: process.env.CLIENT_URL,
