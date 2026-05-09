@@ -109,7 +109,8 @@ module.exports = (io) => {
               type: question.type,
               options: displayOptions,
               totalVotes,
-              winner
+              winner,
+              correctAnswer: question.correctAnswer || null
             };
           })
         );

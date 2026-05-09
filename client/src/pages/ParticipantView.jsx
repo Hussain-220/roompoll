@@ -144,21 +144,30 @@ export default function ParticipantView() {
                         qResult.options.map((opt, oIdx) => {
                           const isWinner = opt.answer === qResult.winner && opt.count > 0;
                           const isMyVote = opt.answer === myAnswer;
+                          const isCorrect = qResult.correctAnswer && opt.answer === qResult.correctAnswer;
+                          const isMyAnswerWrong = isMyVote && qResult.correctAnswer && opt.answer !== qResult.correctAnswer;
                           const pct = opt.percentage !== undefined ? opt.percentage : (totalVotes > 0 ? Math.round((opt.count / totalVotes) * 100) : 0);
                           
+                          const bgColor = isCorrect ? 'bg-green-500' : (opt.answer !== qResult.correctAnswer && qResult.correctAnswer ? 'bg-red-500' : 'bg-[var(--accent)]');
+                          const borderColor = isCorrect ? 'border-green-500' : (isMyAnswerWrong ? 'border-red-500' : (isWinner ? 'border-[var(--accent)]' : 'border-[var(--border)]'));
+                          
                           return (
-                            <div key={oIdx} className={`relative p-3 rounded-lg border overflow-hidden ${isWinner ? 'border-[var(--accent)]' : 'border-[var(--border)]'}`}>
+                            <div key={oIdx} className={`relative p-3 rounded-lg border overflow-hidden ${borderColor}`}>
                               <div className="absolute inset-0 bg-[var(--bg-surface)] -z-10">
                                 <div 
-                                  className={`h-full ${isWinner ? 'bg-[var(--accent)] opacity-20' : 'bg-[var(--text-secondary)] opacity-10'}`} 
+                                  className={`h-full ${bgColor} ${isCorrect ? 'opacity-20' : (isMyAnswerWrong ? 'opacity-30' : 'opacity-10')}`} 
                                   style={{ width: `${pct}%` }}
                                 />
                               </div>
                               <div className="flex justify-between items-center w-full z-10 text-sm md:text-base">
                                 <div className="font-bold flex items-center gap-2">
-                                  {isWinner && <span className="text-[var(--accent)]">🏆</span>}
+                                  {isCorrect && <span className="text-green-600">✅</span>}
+                                  {isMyAnswerWrong && <span className="text-red-600">❌</span>}
+                                  {isWinner && !isCorrect && !isMyAnswerWrong && <span className="text-[var(--accent)]">🏆</span>}
                                   {opt.answer}
-                                  {isMyVote && <span className="badge bg-[var(--accent)] text-white text-xs px-2 py-0.5 ml-2">Your vote ✓</span>}
+                                  {isMyVote && isCorrect && <span className="badge bg-green-500 text-white text-xs px-2 py-0.5 ml-2">Correct! ✓</span>}
+                                  {isMyVote && isMyAnswerWrong && <span className="badge bg-red-500 text-white text-xs px-2 py-0.5 ml-2">Wrong ✗</span>}
+                                  {isMyVote && !isCorrect && !isMyAnswerWrong && <span className="badge bg-[var(--accent)] text-white text-xs px-2 py-0.5 ml-2">Your vote ✓</span>}
                                 </div>
                                 <span className="font-bold text-[var(--text-secondary)]">{pct}%</span>
                               </div>

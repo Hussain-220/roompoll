@@ -20,6 +20,10 @@ const questionSchema = new mongoose.Schema({
     type: [String],
     default: [],
   },
+  correctAnswer: {
+    type: String,
+    default: null, // For MCQ only
+  },
   order: {
     type: Number,
     default: 0,

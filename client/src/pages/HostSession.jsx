@@ -194,19 +194,24 @@ export default function HostSession() {
             ) : (
              qResult.options.map((opt, idx) => {
               const isWinner = qResult.winner && opt.answer === qResult.winner && opt.count > 0;
+              const isCorrect = qResult.correctAnswer && opt.answer === qResult.correctAnswer;
+              const bgColor = isCorrect ? 'bg-green-500' : (opt.answer !== qResult.correctAnswer && qResult.correctAnswer ? 'bg-red-500' : 'bg-[var(--text-secondary)]');
+              const borderColor = isCorrect ? 'border-green-500' : (opt.answer !== qResult.correctAnswer && qResult.correctAnswer ? 'border-red-500' : 'border-[var(--border)]');
+              const textColor = isCorrect ? 'text-green-600' : (opt.answer !== qResult.correctAnswer && qResult.correctAnswer ? 'text-red-600' : '');
+              
               return (
-                <div key={idx} className={`relative p-4 rounded-xl border-2 transition-all ${isWinner ? 'border-[var(--accent)]' : 'border-[var(--border)]'}`}>
+                <div key={idx} className={`relative p-4 rounded-xl border-2 transition-all ${borderColor}`}>
                   <div className="absolute inset-0 bg-[var(--bg-surface)] rounded-xl overflow-hidden -z-10">
                     <motion.div 
-                      className={`h-full ${isWinner ? 'bg-[var(--accent)] opacity-20' : 'bg-[var(--text-secondary)] opacity-10'}`}
+                      className={`h-full ${bgColor} opacity-20`}
                       initial={{ width: 0 }}
                       animate={{ width: `${opt.percentage}%` }}
                       transition={{ duration: 1, ease: "easeOut" }}
                     />
                   </div>
                   <div className="flex justify-between items-center z-10 w-full">
-                    <span className={`text-xl font-bold ${isWinner ? 'text-[var(--accent)]' : ''}`}>
-                      {isWinner && '🏆 '}{opt.answer}
+                    <span className={`text-xl font-bold ${textColor}`}>
+                      {isCorrect && '✅ '}{isWinner && !isCorrect && '🥇 '}{opt.answer}
                     </span>
                     <div className="flex items-center gap-4">
                       <span className="text-lg font-bold">{opt.percentage}%</span>

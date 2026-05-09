@@ -11,7 +11,7 @@ export default function CreateRoom() {
   const navigate = useNavigate();
 
   const addQuestion = (type) => {
-    setQuestions([...questions, { id: crypto.randomUUID(), text: '', type, options: type === 'mcq' ? ['', ''] : [] }]);
+    setQuestions([...questions, { id: crypto.randomUUID(), text: '', type, options: type === 'mcq' ? ['', ''] : [], correctAnswer: null }]);
   };
 
   const updateQuestion = (id, field, value) => {
@@ -55,7 +55,14 @@ export default function CreateRoom() {
 
       for (let i = 0; i < questions.length; i++) {
         const q = questions[i];
-        await axios.post('/questions', { roomId, text: q.text, type: q.type, options: q.options, order: i });
+        await axios.post('/questions', { 
+          roomId, 
+          text: q.text, 
+          type: q.type, 
+          options: q.options,
+          correctAnswer: q.type === 'mcq' ? q.correctAnswer : null,
+          order: i 
+        });
       }
 
       toast.success('Room created!');
@@ -84,11 +91,25 @@ export default function CreateRoom() {
             <input className="input-field mb-4 font-medium" placeholder="Ask something..." value={q.text} onChange={e=>updateQuestion(q.id, 'text', e.target.value)} />
             
             {q.type === 'mcq' && (
-              <div className="space-y-2 pl-4 border-l-2 border-[var(--border-accent)]">
-                {q.options.map((opt, i) => (
-                  <input key={i} className="input-field py-2 text-sm" placeholder={`Option ${i+1}`} value={opt} onChange={e=>updateOption(q.id, i, e.target.value)} />
-                ))}
-                {q.options.length < 4 && <button type="button" onClick={()=>addOption(q.id)} className="btn-ghost text-xs mt-2">+ Add Option</button>}
+              <div className="space-y-4 pl-4 border-l-2 border-[var(--border-accent)]">
+                <div className="space-y-2">
+                  {q.options.map((opt, i) => (
+                    <input key={i} className="input-field py-2 text-sm" placeholder={`Option ${i+1}`} value={opt} onChange={e=>updateOption(q.id, i, e.target.value)} />
+                  ))}
+                  {q.options.length < 4 && <button type="button" onClick={()=>addOption(q.id)} className="btn-ghost text-xs mt-2">+ Add Option</button>}
+                </div>
+                
+                <div className="mt-4 p-3 bg-[var(--bg-surface)] rounded-lg border border-[var(--border)]">
+                  <label className="block text-xs font-bold text-[var(--text-secondary)] mb-2">✅ Select Correct Answer:</label>
+                  <select 
+                    value={q.correctAnswer || ''} 
+                    onChange={e => updateQuestion(q.id, 'correctAnswer', e.target.value || null)}
+                    className="input-field text-sm"
+                  >
+                    <option value="">-- Not set --</option>
+                    {q.options.map((opt, i) => opt.trim() && <option key={i} value={opt}>{opt}</option>)}
+                  </select>
+                </div>
               </div>
             )}
           </div>
