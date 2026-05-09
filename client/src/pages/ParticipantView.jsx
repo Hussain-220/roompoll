@@ -201,7 +201,7 @@ export default function ParticipantView() {
                               {/* Content */}
                               <div className="flex justify-between items-center w-full z-10">
                                 <div className="flex items-center gap-3 flex-1">
-                                  <span className="font-bold text-base md:text-lg text-[var(--text-primary)]">{opt.answer}</span>
+                                  <span className="font-bold text-base md:text-lg text-white">{opt.answer}</span>
                                   
                                   {/* Your vote indicator */}
                                   {isMyVote && (
