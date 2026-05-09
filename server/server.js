@@ -36,6 +36,12 @@ console.log('CORS configured for origin:', corsOptions.origin);
 app.use(cors(corsOptions));
 app.use(express.json());
 
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`📨 ${req.method} ${req.path} from ${req.ip}`);
+  next();
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/rooms', roomRoutes);
@@ -55,7 +61,14 @@ app.use((err, req, res, next) => {
 });
 
 // Socket.io
-socketHandler(io);
+try {
+  console.log('🔌 Initializing Socket.io...');
+  socketHandler(io);
+  console.log('🔌 Socket.io initialized successfully');
+} catch (err) {
+  console.error('❌ Socket.io initialization error:', err);
+  process.exit(1);
+}
 
 // ==========================================
 // DIAGNOSTICS BLOCK (Railway Debugging)
