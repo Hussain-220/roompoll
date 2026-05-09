@@ -22,6 +22,7 @@ module.exports = (io) => {
     // --- Participant joins room ---
     socket.on('join-room', async ({ code, participantId }) => {
       const roomCode = code.toUpperCase();
+      console.log(`👥 Participant joining room: ${roomCode}, participantId: ${participantId}`);
 
       try {
         const room = await Room.findOne({ code: roomCode }).populate({
@@ -29,9 +30,13 @@ module.exports = (io) => {
           options: { sort: { order: 1 } },
         });
 
-        if (!room) return;
+        if (!room) {
+          console.error(`❌ join-room: room not found: ${roomCode}`);
+          return;
+        }
         
         if (room.status === 'ended') {
+          console.log(`⏹️ join-room: room already ended: ${roomCode}`);
           socket.emit('join-error', { message: 'This session has already ended.' });
           return;
         }
@@ -41,10 +46,13 @@ module.exports = (io) => {
         roomParticipants[roomCode].add(socket.id);
 
         const count = roomParticipants[roomCode].size;
+        console.log(`✅ Participant joined! Room: ${roomCode}, Count: ${count}`);
         io.to(roomCode).emit('participant-count', { count });
 
         const currentQuestion =
           room.status === 'active' ? room.questions[room.currentQuestionIndex] : null;
+        
+        console.log(`📨 Sending room-joined: roomStatus=${room.status}, hasQuestion=${!!currentQuestion}`);
         socket.emit('room-joined', {
           question: currentQuestion,
           totalParticipants: count,
@@ -150,8 +158,12 @@ module.exports = (io) => {
     // --- Host advances to next/prev question ---
     socket.on('next-question', async ({ roomCode, index }) => {
       try {
+        console.log('📨 next-question received:', { roomCode, index });
         const token = socket.handshake.auth.token;
-        if (!token) return;
+        if (!token) {
+          console.error('❌ next-question: no token');
+          return;
+        }
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const code = roomCode.toUpperCase();
         
@@ -159,15 +171,25 @@ module.exports = (io) => {
           path: 'questions',
           options: { sort: { order: 1 } },
         });
-        if (!room || room.hostId.toString() !== decoded.id) return;
+        
+        if (!room) {
+          console.error('❌ next-question: room not found:', code);
+          return;
+        }
+        
+        if (room.hostId.toString() !== decoded.id) {
+          console.error('❌ next-question: unauthorized host');
+          return;
+        }
 
         room.currentQuestionIndex = index;
         await room.save();
 
         const question = room.questions[index];
+        console.log('📤 Broadcasting question-changed:', { code, index, questionText: question.text });
         io.to(code).emit('question-changed', { question, index, total: room.questions.length });
       } catch (err) {
-        console.error('next-question error:', err);
+        console.error('❌ next-question error:', err.message);
       }
     });
 

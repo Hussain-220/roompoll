@@ -9,16 +9,40 @@ export const useSocket = () => {
 
   useEffect(() => {
     if (!socketInstance) {
-      socketInstance = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000', {
-        transports: ['websocket'],
+      // Get socket URL from environment or construct from current origin
+      const socketUrl = import.meta.env.VITE_SOCKET_URL || 
+        (import.meta.env.PROD ? window.location.origin : 'http://localhost:5000');
+      
+      console.log('🔌 Connecting to socket at:', socketUrl);
+      
+      socketInstance = io(socketUrl, {
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
+        reconnectionAttempts: 5,
         auth: { token: localStorage.getItem('roompoll_token') }
+      });
+
+      socketInstance.on('connect_error', (err) => {
+        console.error('❌ Socket connection error:', err);
+      });
+
+      socketInstance.on('error', (err) => {
+        console.error('❌ Socket error:', err);
       });
     }
 
     setSocket(socketInstance);
 
-    const onConnect = () => setConnected(true);
-    const onDisconnect = () => setConnected(false);
+    const onConnect = () => {
+      console.log('✅ Socket connected');
+      setConnected(true);
+    };
+    const onDisconnect = () => {
+      console.log('⚠️ Socket disconnected');
+      setConnected(false);
+    };
 
     socketInstance.on('connect', onConnect);
     socketInstance.on('disconnect', onDisconnect);
@@ -39,7 +63,14 @@ export const useSocket = () => {
   }, []);
 
   const emit = useCallback((event, data) => {
-    if (!socketInstance) return;
+    if (!socketInstance) {
+      console.warn('⚠️ Socket not initialized, cannot emit:', event);
+      return;
+    }
+    if (!socketInstance.connected) {
+      console.warn('⚠️ Socket not connected, cannot emit:', event);
+      return;
+    }
     socketInstance.emit(event, data);
   }, []);
 

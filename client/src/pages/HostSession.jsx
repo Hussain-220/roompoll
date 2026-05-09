@@ -62,11 +62,28 @@ export default function HostSession() {
 
   const startSession = async () => {
     try {
+      console.log('🎬 Starting session...');
+      if (!connected) {
+        toast.error('Socket not connected');
+        return;
+      }
+      
       await axios.patch(`/rooms/${code}/start`);
+      console.log('✅ Backend updated');
+      
       setStatus('active');
-      emit('next-question', { roomCode: code, index: 0 });
-      fetchResults(questions[0]._id);
-    } catch (err) { toast.error('Failed to start session'); }
+      
+      // Wait a moment to ensure socket is ready, then emit
+      setTimeout(() => {
+        console.log('📤 Emitting next-question event');
+        emit('next-question', { roomCode: code, index: 0 });
+        fetchResults(questions[0]._id);
+        toast.success('Session started!');
+      }, 300);
+    } catch (err) { 
+      console.error('startSession error:', err);
+      toast.error('Failed to start session'); 
+    }
   };
 
   const goToQuestion = async (index) => {

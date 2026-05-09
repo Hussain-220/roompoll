@@ -12,11 +12,16 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!email.trim() || !password.trim()) {
+      return toast.error('Please fill in all fields');
+    }
     try {
       await login(email, password);
       navigate('/dashboard');
     } catch (err) {
-      toast.error('Invalid credentials');
+      console.error('Login error:', err);
+      const message = err.response?.data?.message || err.message || 'Login failed';
+      toast.error(message);
     }
   };
 

@@ -19,11 +19,16 @@ export default function ParticipantView() {
   const [finalResults, setFinalResults] = useState([]);
 
   useEffect(() => {
-    if (!socket || !connected) return;
+    if (!socket || !connected) {
+      console.log('⏳ Waiting for socket connection...');
+      return;
+    }
 
+    console.log('🔗 Socket connected, joining room:', code);
     emit('join-room', { code, participantId });
 
     const unsubJoined = subscribe('room-joined', (data) => {
+      console.log('✅ room-joined event received:', data);
       setRoomTitle(data.roomTitle);
       setStatus(data.status);
       setQuestion(data.question);
@@ -31,6 +36,7 @@ export default function ParticipantView() {
     });
 
     const unsubChanged = subscribe('question-changed', (data) => {
+      console.log('📣 question-changed event received:', data);
       setQuestion(data.question);
       setStatus('active');
       setVoted(false);
@@ -38,13 +44,14 @@ export default function ParticipantView() {
     });
 
     const unsubEnded = subscribe('session-ended', (data) => {
-      console.log('Participant received session-ended:', JSON.stringify(data));
+      console.log('🏁 session-ended event received:', data);
       setStatus('ended');
       if (data.results) setFinalResults(data.results);
       confetti({ particleCount: 120, spread: 70, origin: { y: 0.5 } });
     });
 
     const unsubError = subscribe('vote-error', (data) => {
+      console.warn('❌ vote-error:', data);
       toast.error(data.message);
       setVoted(true);
     });
