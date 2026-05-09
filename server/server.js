@@ -43,7 +43,10 @@ app.use('/api/questions', questionRoutes);
 app.use('/api/votes', voteRoutes);
 
 // Health check
-app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
+app.get('/api/health', (req, res) => {
+  console.log('📍 Health check called');
+  res.json({ status: 'ok' });
+});
 
 // Global error handler
 app.use((err, req, res, next) => {
@@ -79,3 +82,15 @@ mongoose
     console.error('❌ MongoDB connection error:', err);
     process.exit(1);
   });
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  console.error('❌ Uncaught Exception:', err);
+  process.exit(1);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (err) => {
+  console.error('❌ Unhandled Rejection:', err);
+  process.exit(1);
+});
