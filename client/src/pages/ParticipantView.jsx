@@ -45,6 +45,17 @@ export default function ParticipantView() {
 
     const unsubEnded = subscribe('session-ended', (data) => {
       console.log('🏁 session-ended event received:', data);
+      console.log('📊 Results structure:', JSON.stringify(data.results, null, 2));
+      if (data.results) {
+        data.results.forEach((r, i) => {
+          console.log(`Result ${i}:`, {
+            questionText: r.questionText,
+            type: r.type,
+            correctAnswer: r.correctAnswer,
+            options: r.options
+          });
+        });
+      }
       setStatus('ended');
       if (data.results) setFinalResults(data.results);
       confetti({ particleCount: 120, spread: 70, origin: { y: 0.5 } });
