@@ -26,19 +26,25 @@ app.use(express.json());
 
 console.log('✅ Middleware loaded');
 
+// Request logging - FIRST middleware
+app.use((req, res, next) => {
+  console.log(`📨 [${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
+
 // Routes - MINIMAL
 app.get('/', (req, res) => {
-  console.log('📨 GET / called');
+  console.log('✅ GET / handler called');
   res.json({ message: 'Server is alive!' });
 });
 
 app.get('/ping', (req, res) => {
-  console.log('📨 GET /ping called');
-  res.send('pong');
+  console.log('✅ GET /ping handler called');
+  res.json({ pong: true });
 });
 
 app.get('/api/health', (req, res) => {
-  console.log('📨 GET /api/health called');
+  console.log('✅ GET /api/health handler called');
   res.json({ status: 'ok' });
 });
 
