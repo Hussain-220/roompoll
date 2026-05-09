@@ -1,7 +1,6 @@
 require('express-async-errors');
 
 // Load dotenv only in development (local machine)
-// This prevents it from overriding Railway environment variables
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
 }
@@ -48,11 +47,21 @@ app.use((err, req, res, next) => {
 // Socket.io
 socketHandler(io);
 
-// Connect to MongoDB and start server
+// ==========================================
+// DIAGNOSTICS BLOCK (Railway Debugging)
+// ==========================================
 const PORT = process.env.PORT || 5000;
+const uri = process.env.MONGO_URI;
 
+console.log("\n================ DIAGNOSTICS ================");
+console.log("--> NODE_ENV is:", process.env.NODE_ENV);
+console.log("--> URI Type:", typeof uri);
+console.log("--> Railway sees URI as:", uri ? uri.substring(0, 45) + "..." : "UNDEFINED! VARIABLE MISSING.");
+console.log("=============================================\n");
+
+// Connect to MongoDB and start server
 mongoose
-  .connect(process.env.MONGO_URI)
+  .connect(uri)
   .then(() => {
     console.log('✅ MongoDB connected');
     server.listen(PORT, () => {
