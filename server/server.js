@@ -17,6 +17,7 @@ const voteRoutes = require('./routes/votes');
 const socketHandler = require('./socket/socketHandler');
 
 const app = express();
+
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
@@ -42,17 +43,28 @@ app.use((req, res, next) => {
   next();
 });
 
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/rooms', roomRoutes);
-app.use('/api/questions', questionRoutes);
-app.use('/api/votes', voteRoutes);
-
-// Health check
-app.get('/api/health', (req, res) => {
-  console.log('📍 Health check called');
-  res.json({ status: 'ok' });
+// Root route
+app.get('/', (req, res) => {
+  res.json({ message: 'RoomPoll API is running' });
 });
+
+// Health check - FIRST before all other routes
+app.get('/api/health', (req, res) => {
+  console.log('✅ Health check called');
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Routes
+try {
+  app.use('/api/auth', authRoutes);
+  app.use('/api/rooms', roomRoutes);
+  app.use('/api/questions', questionRoutes);
+  app.use('/api/votes', voteRoutes);
+  console.log('✅ All routes loaded successfully');
+} catch (err) {
+  console.error('❌ Error loading routes:', err);
+  process.exit(1);
+}
 
 // Global error handler
 app.use((err, req, res, next) => {
